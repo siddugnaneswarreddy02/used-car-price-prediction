@@ -10,6 +10,12 @@ node_modules
 
 # production
 /build
+/dist
+
+# python
+__pycache__/
+*.pyc
+.venv/
 
 # misc
 .DS_Store

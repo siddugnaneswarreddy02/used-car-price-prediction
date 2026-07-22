@@ -1,0 +1,34 @@
+services:
+  - type: web
+    name: used-car-ml-service
+    env: python
+    rootDir: ml-service
+    plan: free
+    buildCommand: pip install -r requirements.txt
+    startCommand: gunicorn app:app --bind 0.0.0.0:$PORT --timeout 120
+
+  - type: web
+    name: used-car-backend
+    env: node
+    rootDir: used-car-backend
+    plan: free
+    buildCommand: npm install
+    startCommand: npm start
+    envVars:
+      - key: ML_SERVICE_URL
+        fromService:
+          name: used-car-ml-service
+          type: web
+          property: host
+
+  - type: web
+    name: used-car-frontend
+    env: static
+    buildCommand: npm install && npm run build
+    staticPublishPath: dist
+    envVars:
+      - key: VITE_API_URL
+        fromService:
+          name: used-car-backend
+          type: web
+          property: host
