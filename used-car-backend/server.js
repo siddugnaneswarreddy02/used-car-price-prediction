@@ -12,8 +12,31 @@ app.use(cors({
 }));
 app.use(express.json({ limit: "10mb" }));
 
-const normalizeUrl = (url) =>
-    /^https?:\/\//i.test(url) ? url.replace(/\/$/, "") : `https://${url}`;
+const normalizeUrl = (url) => {
+    // Ensure the URL has a protocol
+    let normalized = /^https?:\/\//i.test(url)
+        ? url.replace(/\/$/, "")
+        : `https://${url}`;
+
+    // Fix Render URLs that are missing .onrender.com (e.g. "https://used-car-ml-service")
+    try {
+        const u = new URL(normalized);
+        const hostname = u.hostname;
+        if (
+            hostname !== "localhost" &&
+            hostname !== "127.0.0.1" &&
+            !hostname.includes(".") &&
+            !hostname.endsWith(".onrender.com")
+        ) {
+            normalized = `${normalized}.onrender.com`;
+            console.log(`[normalizeUrl] Fixed Render URL: ${normalized}`);
+        }
+    } catch (e) {
+        // ignore invalid URLs
+    }
+
+    return normalized;
+};
 
 const ML_SERVICE_URL = normalizeUrl(process.env.ML_SERVICE_URL || "http://localhost:8000");
 
