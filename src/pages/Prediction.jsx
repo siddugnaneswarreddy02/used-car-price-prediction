@@ -261,8 +261,15 @@ function Prediction() {
     navigate("/result");
 
   } catch (error) {
-    console.error(error);
-    setError("Prediction failed");
+    console.error("Prediction error:", error);
+    const message = error.message || "Prediction failed";
+    if (message.includes("Server error:")) {
+      setError(`❌ ${message}`);
+    } else if (message.includes("Cannot connect")) {
+      setError(`❌ ${message}`);
+    } else {
+      setError(`❌ Prediction failed: ${message}`);
+    }
   }
 };
   const locationOptions = ["Hyderabad","Bangalore","Chennai","Mumbai","Delhi","Pune","Kolkata","Ahmedabad","Jaipur","Lucknow",

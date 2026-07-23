@@ -22,11 +22,75 @@ REQUIRED_FIELDS = [
 ]
 
 
+# City name synonyms for better matching
+CITY_SYNONYMS = {
+    "bangalore": "bengaluru",
+    "bengaluru": "bengaluru",
+    "delhi": "delhi",
+    "mumbai": "mumbai",
+    "kolkata": "kolkata",
+    "chennai": "chennai",
+    "hyderabad": "hyderabad",
+    "pune": "pune",
+    "ahmedabad": "ahmedabad",
+    "jaipur": "jaipur",
+    "lucknow": "lucknow",
+    "gurgaon": "gurgaon",
+    "noida": "noida",
+    "chandigarh": "chandigarh",
+    "bhopal": "bhopal",
+    "indore": "indore",
+}
+
+
 def safe_encode(column_name, value):
+    """Encode a categorical value, with fuzzy matching fallback."""
     encoder = encoders[column_name]
-    if value in encoder.classes_:
+    classes = encoder.classes_
+
+    # 1. Exact match
+    if value in classes:
         return encoder.transform([value])[0]
-    return encoder.transform([encoder.classes_[0]])[0]
+
+    # 2. Fuzzy match: check if value is a substring of any class
+    value_lower = value.lower().strip()
+    for cls in classes:
+        if isinstance(cls, str) and value_lower in cls.lower():
+            return encoder.transform([cls])[0]
+
+    # 3. For locations, try extracting city name
+    if column_name == "Location":
+        # Try matching first word of value within class
+        first_word = value.split(",")[0].split(" ")[0].strip().lower()
+        for cls in classes:
+            if isinstance(cls, str) and first_word in cls.lower():
+                return encoder.transform([cls])[0]
+
+        # Try synonym map (e.g. "Bangalore" -> "bengaluru")
+        synonym = CITY_SYNONYMS.get(first_word)
+        if synonym:
+            for cls in classes:
+                if isinstance(cls, str) and synonym in cls.lower():
+                    return encoder.transform([cls])[0]
+
+        # Try matching ANY word from value against any class word
+        value_words = set(value_lower.replace(",", " ").split())
+        best_match = None
+        best_count = 0
+        for cls in classes:
+            if isinstance(cls, str):
+                cls_words = set(cls.lower().split())
+                common = value_words & cls_words
+                if len(common) > best_count:
+                    best_count = len(common)
+                    best_match = cls
+        if best_match and best_count > 0:
+            print(f"  → Best word match for '{value}': '{best_match}'")
+            return encoder.transform([best_match])[0]
+
+    # 4. Last resort: use the first class
+    print(f"WARNING: '{value}' not found in {column_name} encoder, using default")
+    return encoder.transform([classes[0]])[0]
 
 
 @app.get("/")

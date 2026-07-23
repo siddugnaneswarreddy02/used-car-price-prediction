@@ -6,7 +6,10 @@
   "scripts": {
     "dev": "vite",
     "build": "vite build",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "start:backend": "cd used-car-backend && node server.js",
+    "start:ml": "cd ml-service && python app.py",
+    "start:all": "echo 'Open 3 terminals and run: npm run start:ml, npm run start:backend, npm run dev'"
   },
   "dependencies": {
     "axios": "^1.18.1",

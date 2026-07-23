@@ -4,8 +4,13 @@ const axios = require("axios");
 
 const app = express();
 
-app.use(cors());
-app.use(express.json());
+app.use(cors({
+    origin: true,
+    credentials: true,
+    methods: ["GET", "POST", "OPTIONS"],
+    allowedHeaders: ["Content-Type", "Authorization"],
+}));
+app.use(express.json({ limit: "10mb" }));
 
 const normalizeUrl = (url) =>
     /^https?:\/\//i.test(url) ? url.replace(/\/$/, "") : `https://${url}`;
@@ -53,35 +58,75 @@ app.post("/predict", async (req, res) => {
     console.log("Validation successful. Calling ML service...");
 
     try {
-        const { data } = await axios.post(`${ML_SERVICE_URL}/predict`, {
-            year,
-            car_model,
-            car_variant,
-            km_driven,
-            fuel_type,
-            transmission,
-            ownership,
-            location
+        const mlResponse = await axios.post(
+            `${ML_SERVICE_URL}/predict`,
+            {
+                year: parseInt(year),
+                car_model,
+                car_variant,
+                km_driven: parseInt(km_driven),
+                fuel_type,
+                transmission,
+                ownership,
+                location,
+            },
+            {
+                timeout: 30000,
+                headers: { "Content-Type": "application/json" },
+            }
+        );
+
+        const data = mlResponse.data;
+        console.log("ML Response:", JSON.stringify(data, null, 2));
+
+        res.json({
+            predicted_price_lakhs: data.predicted_price_lakhs,
+            predicted_price_rupees: data.predicted_price_rupees,
         });
-
-        console.log("Predicted Price (Lakhs):", data.predicted_price_lakhs);
-        console.log("Sending response to frontend...");
-
-        res.json(data);
     } catch (error) {
-        console.error("ML service error:", error.message);
+        console.error("ML service call failed:");
 
-        const status = error.response?.status || 502;
+        if (error.code === "ECONNREFUSED") {
+            console.error("  → ML Service is not running on", ML_SERVICE_URL);
+            return res.status(502).json({
+                error: "Prediction service is not available",
+                details: "ML backend is offline. Start it with: cd ml-service && python app.py",
+            });
+        }
+
+        if (error.code === "ECONNABORTED") {
+            console.error("  → Request timed out");
+            return res.status(504).json({
+                error: "Prediction service timed out",
+                details: "The ML model took too long to respond. Try again.",
+            });
+        }
+
+        const status = error.response?.status || 500;
+        const errorData = error.response?.data || {};
+
+        console.error("  → Status:", status);
+        console.error("  → Details:", JSON.stringify(errorData));
 
         return res.status(status).json({
-            error: "Prediction failed",
-            details: error.response?.data || error.message
+            error: errorData.error || "Prediction failed",
+            details: errorData.details || error.message,
         });
     }
+});
+
+// ── Express 5 Global Error Handler ──
+app.use((err, req, res, next) => {
+    console.error("Unhandled error:", err);
+    res.status(500).json({
+        error: "Internal server error",
+        details: err.message,
+    });
 });
 
 const PORT = process.env.PORT || 5000;
 
 app.listen(PORT, () => {
-    console.log(`Server running on port ${PORT}`);
+    console.log(`\n✓ Backend server running on http://localhost:${PORT}`);
+    console.log(`✓ ML Service URL: ${ML_SERVICE_URL}\n`);
 });
