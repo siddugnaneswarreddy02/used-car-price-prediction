@@ -22,7 +22,7 @@ services:
         fromService:
           name: used-car-ml-service
           type: web
-          property: host
+          property: url
 
   - type: web
     name: used-car-frontend
@@ -34,4 +34,4 @@ services:
         fromService:
           name: used-car-backend
           type: web
-          property: host
+          property: url

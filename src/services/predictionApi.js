@@ -67,12 +67,22 @@ export const predictPrice = async (carData) => {
     };
   } catch (err) {
     if (err.code === "ERR_NETWORK") {
-      throw new Error(
-        "Cannot connect to server. Please ensure:\n" +
-        "1. Backend is running on port 5000\n" +
-        "2. ML service is running on port 8000\n" +
-        "Run: cd used-car-backend && node server.js"
-      );
+      const isLocalhost = API_URL.includes("localhost") || API_URL.includes("127.0.0.1");
+      if (isLocalhost) {
+        throw new Error(
+          "Cannot connect to server. Please ensure:\n" +
+          "1. Backend is running on port 5000\n" +
+          "2. ML service is running on port 8000\n" +
+          "Run: cd used-car-backend && node server.js"
+        );
+      } else {
+        throw new Error(
+          "Cannot connect to backend at " + API_URL + ". Please ensure:\n" +
+          "1. Backend service is deployed and running\n" +
+          "2. VITE_API_URL environment variable is set correctly during build\n" +
+          "Current API_URL: " + API_URL
+        );
+      }
     }
     if (err.response) {
       const msg = err.response.data?.details || err.response.data?.error || err.message;
@@ -81,3 +91,4 @@ export const predictPrice = async (carData) => {
     throw err;
   }
 };
+

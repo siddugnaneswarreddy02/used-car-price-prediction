@@ -33,6 +33,11 @@
 - [x] Added best-word-match fallback with intersection scoring
 - [x] Tested all major Indian cities → all match correctly now
 
-## ✅ All 6 Steps Complete
-Prediction should now work reliably with all major Indian cities and common input formats.
+## ✅ Step 7: Fix Render deployment - API_URL env var resolution
+- [x] Changed `render.yaml` to use `property: url` instead of `property: host` for backend and frontend service env vars
+- [x] Updated `src/services/apiUrl.js` with better logging when VITE_API_URL is missing
+- [x] Updated `src/services/predictionApi.js` to show deployment-specific error messages when not using localhost
+
+## ✅ All 7 Steps Complete
+Prediction should now work reliably both locally and when deployed on Render.
 
