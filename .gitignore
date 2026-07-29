@@ -7,8 +7,11 @@ node_modules
 
 # testing
 /coverage
+<<<<<<< HEAD
 .coverage
 htmlcov/
+=======
+>>>>>>> ac36d71a168011f6e9fdb3d5a25c3bcac2f5f4a8
 
 # production
 /build
@@ -16,6 +19,7 @@ htmlcov/
 
 # python
 __pycache__/
+<<<<<<< HEAD
 *.py[cod]
 *.pkl
 *.joblib
@@ -24,6 +28,9 @@ __pycache__/
 .mypy_cache/
 .ruff_cache/
 .ipynb_checkpoints/
+=======
+*.pyc
+>>>>>>> ac36d71a168011f6e9fdb3d5a25c3bcac2f5f4a8
 .venv/
 
 # misc
@@ -32,8 +39,12 @@ __pycache__/
 .env.development.local
 .env.test.local
 .env.production.local
+<<<<<<< HEAD
 .env
 .env.production
+=======
+
+>>>>>>> ac36d71a168011f6e9fdb3d5a25c3bcac2f5f4a8
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
