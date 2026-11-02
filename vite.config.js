@@ -11,7 +11,21 @@ export default defineConfig({
         changeOrigin: true,
         secure: false,
       },
+      '/analytics': {
+        target: 'http://localhost:5000',
+        changeOrigin: true,
+        secure: false,
+      },
+      '/comparison': {
+        target: 'http://localhost:5000',
+        changeOrigin: true,
+        secure: false,
+      },
+      '/market-trends': {
+        target: 'http://localhost:5000',
+        changeOrigin: true,
+        secure: false,
+      },
     },
   },
 });
-

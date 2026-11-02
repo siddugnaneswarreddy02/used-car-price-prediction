@@ -1,14 +1,17 @@
 #!/usr/bin/env node
 
 /**
- * Unified development server starter.
- * Runs ML Service (Flask), Backend (Express), and Frontend (Vite) concurrently.
- * Usage: node server.js
+ * Unified development server starter (ES Module).
+ * Runs FastAPI Backend (Port 5000) and Frontend (Vite, Port 5173) concurrently.
+ * Usage: node server.js (or npm start)
  */
 
-const { spawn } = require("child_process");
-const path = require("path");
+import { spawn } from "node:child_process";
+import path from "node:path";
+import { fileURLToPath } from "node:url";
 
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 const ROOT = __dirname;
 
 function startProcess(name, command, args, cwd, envOverrides = {}) {
@@ -22,47 +25,46 @@ function startProcess(name, command, args, cwd, envOverrides = {}) {
   proc.stdout.on("data", (data) => {
     const lines = data.toString().trim().split("\n");
     for (const line of lines) {
-      console.log(`[${name}] ${line}`);
+      const trimmed = line.trim();
+      if (trimmed) {
+        console.log(`[${name}] ${trimmed}`);
+      }
     }
   });
 
   proc.stderr.on("data", (data) => {
     const lines = data.toString().trim().split("\n");
     for (const line of lines) {
-      console.error(`[${name}] ${line}`);
+      const trimmed = line.trim();
+      if (trimmed) {
+        console.error(`[${name}] ${trimmed}`);
+      }
     }
   });
 
   proc.on("close", (code) => {
-    console.log(`[${name}] exited with code ${code}`);
+    if (code !== null && code !== 0) {
+      console.log(`[${name}] process exited with code ${code}`);
+    }
   });
 
   return proc;
 }
 
-console.log("========================================");
-console.log("  Used Car Price Prediction - Launcher  ");
-console.log("========================================\n");
+console.log("==========================================");
+console.log("  Used Car Price Prediction - App Launcher");
+console.log("==========================================\n");
 
-// 1. Start ML Service (Flask) on port 8000
-const mlService = startProcess(
-  "ML",
-  "python",
-  ["app.py"],
-  path.join(ROOT, "ml-service"),
-  { PORT: "8000" }
-);
-
-// 2. Start Backend (Express) on port 5000
+// 1. Start FastAPI Asynchronous Backend on port 5000
 const backend = startProcess(
   "BACKEND",
-  "node",
-  ["server.js"],
-  path.join(ROOT, "used-car-backend"),
-  { PORT: "5000", ML_SERVICE_URL: "http://localhost:8000" }
+  "python",
+  ["-m", "uvicorn", "main:app", "--host", "0.0.0.0", "--port", "5000", "--reload"],
+  path.join(ROOT, "backend"),
+  { PORT: "5000" }
 );
 
-// 3. Start Frontend (Vite) on port 5173
+// 2. Start Frontend (Vite) on port 5173
 const frontend = startProcess(
   "FRONTEND",
   "npx",
@@ -72,16 +74,20 @@ const frontend = startProcess(
 );
 
 console.log("Services starting...");
-console.log("  ML Service  → http://localhost:8000");
-console.log("  Backend     → http://localhost:5000");
-console.log("  Frontend    → http://localhost:5173\n");
+console.log("  ✓ Asynchronous Backend (FastAPI) → http://localhost:5000");
+console.log("  ✓ Frontend (Vite React)         → http://localhost:5173\n");
 
 // Graceful shutdown
-process.on("SIGINT", () => {
+function shutdown() {
   console.log("\nShutting down all services...");
-  mlService.kill();
-  backend.kill();
-  frontend.kill();
+  try {
+    backend.kill();
+  } catch (e) {}
+  try {
+    frontend.kill();
+  } catch (e) {}
   process.exit(0);
-});
+}
 
+process.on("SIGINT", shutdown);
+process.on("SIGTERM", shutdown);

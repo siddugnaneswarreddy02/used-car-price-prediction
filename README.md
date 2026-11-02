@@ -1,70 +1,161 @@
-# Getting Started with Create React App
+# 🚗 Used Car Price Prediction Platform
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+A full-stack, machine learning-driven web application to predict used car market valuations in India. Built with a **high-performance Asynchronous FastAPI backend** and a **responsive React (Vite) frontend**.
 
-## Available Scripts
+---
 
-In the project directory, you can run:
+## 🌟 Key Features
 
-### `npm start`
+- **Accurate Price Valuation**: Predicts used car prices based on make, model, variant, year, mileage, fuel type, transmission, ownership history, and location using an **XGBoost Regressor** trained on real Cars24 market data.
+- **Asynchronous FastAPI Backend**: Built on ASGI (`asyncio` + `uvicorn`) for high concurrency, ultra-low latency, and efficient ML inference.
+- **Single Unified Backend Architecture**: Consolidates ML model serving, data preprocessing, fuzzy city matching, analytics, and market comparison into a single `backend/` service.
+- **Interactive Analytics & Trends**: Visual charts for depreciation, fuel demand trends, ownership resale scores, and competitor pricing using Recharts.
+- **Fuzzy Location Matching**: Handles Indian city name variations and synonyms (e.g., *Bangalore* ↔ *Bengaluru*).
+- **One-Command Dev Launcher**: Run both the asynchronous backend and frontend concurrently with `npm start`.
+- **Production-Ready Blueprint**: Pre-configured `render.yaml` for zero-configuration deployment on Render.
 
-Runs the app in the development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in your browser.
+---
 
-The page will reload when you make changes.\
-You may also see any lint errors in the console.
+## 🏗️ Architecture
 
-### `npm test`
+```
+used-car-price-prediction/
+├── backend/                  # Unified Asynchronous FastAPI Service
+│   ├── main.py               # FastAPI application & ML inference endpoints
+│   ├── app.py                # ASGI application alias
+│   ├── cars24_xgboost.pkl    # Trained XGBoost regression model (tracked in Git)
+│   ├── encoders.pkl          # Categorical label encoders (tracked in Git)
+│   ├── Cars24.csv            # Cars24 dataset
+│   ├── create_encoders.py    # Encoder generation utility
+│   ├── requirements.txt      # Python dependencies (FastAPI, Uvicorn, XGBoost, Pandas)
+│   └── runtime.txt           # Pinned Python version (3.11.9)
+├── src/                      # React Frontend Application
+│   ├── components/           # UI components (Navbar, AnalyticsCards, Forms, etc.)
+│   ├── pages/                # Pages (Home, Prediction, Result, Analytics, Comparison, MarketDashboard)
+│   ├── services/             # API clients (predictionApi, analyticsApi, comparisonApi, marketApi)
+│   ├── context/              # CarContext state provider
+│   └── data/                 # Market and car catalog metadata
+├── public/                   # Static public assets
+├── render.yaml               # Render Infrastructure-as-Code deployment blueprint
+├── server.js                 # Unified dev runner (ES Module, runs FastAPI + Vite)
+├── package.json              # Frontend & platform script definitions
+└── vite.config.js            # Vite build & local API proxy configuration
+```
 
-Launches the test runner in the interactive watch mode.\
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
+---
 
-### `npm run build`
+## 🚀 Quick Start (Local Development)
 
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
+### 1. Prerequisites
+- **Node.js** (v18 or higher)
+- **Python** (v3.11 or v3.12)
+- **Git**
 
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
+### 2. Install Dependencies
 
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
+Install frontend dependencies:
+```bash
+npm install
+```
 
-### `npm run eject`
+Install backend Python dependencies:
+```bash
+pip install -r backend/requirements.txt
+```
 
-**Note: this is a one-way operation. Once you `eject`, you can't go back!**
+### 3. Launch the Application
 
-If you aren't satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
+Start both the **FastAPI backend** (port `5000`) and the **React frontend** (port `5173`) with a single command:
+```bash
+npm start
+```
 
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you're on your own.
+Open your browser at:
+- **Frontend App**: [http://localhost:5173](http://localhost:5173)
+- **Backend API & Swagger Docs**: [http://localhost:5000/docs](http://localhost:5000/docs)
 
-You don't have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn't feel obligated to use this feature. However we understand that this tool wouldn't be useful if you couldn't customize it when you are ready for it.
+---
 
-## Learn More
+## 🛠️ Individual Service Commands
 
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
+Run backend independently:
+```bash
+npm run start:backend
+# Starts uvicorn on http://localhost:5000 with auto-reload
+```
 
-To learn React, check out the [React documentation](https://reactjs.org/).
+Run frontend independently:
+```bash
+npm run dev
+# Starts Vite dev server on http://localhost:5173
+```
 
-### Code Splitting
+Build frontend for production:
+```bash
+npm run build
+```
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/code-splitting](https://facebook.github.io/create-react-app/docs/code-splitting)
+---
 
-### Analyzing the Bundle Size
+## 📡 API Reference
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size](https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size)
+All backend endpoints run under `http://localhost:5000` (or your deployed Render backend URL):
 
-### Making a Progressive Web App
+### 1. Health Check
+- **`GET /`**
+  - Returns backend status and API version.
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app](https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app)
+### 2. Predict Price
+- **`POST /predict`**
+  - **Payload**:
+    ```json
+    {
+      "year": 2019,
+      "car_model": "Hyundai Creta",
+      "car_variant": "1.6 CRDi SX",
+      "km_driven": 35000,
+      "fuel_type": "Diesel",
+      "transmission": "Manual",
+      "ownership": "1st owner",
+      "location": "Hyderabad",
+      "insurance": "Comprehensive"
+    }
+    ```
+  - **Response**:
+    ```json
+    {
+      "predicted_price_lakhs": 9.25,
+      "predicted_price_rupees": 925000
+    }
+    ```
 
-### Advanced Configuration
+### 3. Analytics
+- **`GET /analytics`**
+  - Returns condition scores, fuel scores, and resale valuation metrics.
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/advanced-configuration](https://facebook.github.io/create-react-app/docs/advanced-configuration)
+### 4. Comparison
+- **`POST /comparison`**
+  - Returns market-comparable vehicles across similar segment and fuel type.
 
-### Deployment
+### 5. Market Trends
+- **`GET /market-trends`**
+  - Returns average, high, low market prices and demand indices.
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/deployment](https://facebook.github.io/create-react-app/docs/deployment)
+---
 
-### `npm run build` fails to minify
+## ☁️ Deployment (Render)
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify](https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify)
+This repository includes a production-ready `render.yaml` Blueprint that deploys **only the two necessary services**:
+1. **`used-car-backend`** (Python Web Service):
+   - Root Directory: `backend`
+   - Start Command: `uvicorn main:app --host 0.0.0.0 --port $PORT`
+   - Python Version: `3.11.9`
+2. **`used-car-frontend`** (Static Site):
+   - Build Command: `npm install && npm run build`
+   - Publish Directory: `dist`
+   - Environment Variable: `VITE_API_URL` automatically links to the backend's live URL.
+
+---
+
+## 📦 Model Artifacts & Git
+The trained model (`backend/cars24_xgboost.pkl`) and encoders (`backend/encoders.pkl`) are tracked in the repository and available directly in GitHub.

@@ -56,7 +56,7 @@ export const predictPrice = async (carData) => {
     console.log("Backend response:", response.data);
 
     if (!response.data || response.data.predicted_price_rupees === undefined) {
-      throw new Error(response.data?.error || "Invalid response from server");
+      throw new Error(response.data?.detail || response.data?.error || "Invalid response from server");
     }
 
     return {
@@ -70,10 +70,9 @@ export const predictPrice = async (carData) => {
       const isLocalhost = API_URL.includes("localhost") || API_URL.includes("127.0.0.1");
       if (isLocalhost) {
         throw new Error(
-          "Cannot connect to server. Please ensure:\n" +
-          "1. Backend is running on port 5000\n" +
-          "2. ML service is running on port 8000\n" +
-          "Run: cd used-car-backend && node server.js"
+          "Cannot connect to backend server. Please ensure:\n" +
+          "1. FastAPI backend is running on port 5000\n" +
+          "Run: npm run start:backend (or node server.js)"
         );
       } else {
         throw new Error(
@@ -85,10 +84,9 @@ export const predictPrice = async (carData) => {
       }
     }
     if (err.response) {
-      const msg = err.response.data?.details || err.response.data?.error || err.message;
-      throw new Error(`Server error: ${msg}`);
+      const msg = err.response.data?.detail || err.response.data?.details || err.response.data?.error || err.message;
+      throw new Error(`Server error: ${typeof msg === 'object' ? JSON.stringify(msg) : msg}`);
     }
     throw err;
   }
 };
-
