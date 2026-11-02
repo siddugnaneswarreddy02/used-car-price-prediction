@@ -1,7 +1,7 @@
 services:
   - type: web
     name: used-car-backend
-    env: python
+    runtime: python
     rootDir: backend
     plan: free
     buildCommand: pip install --upgrade pip setuptools wheel && pip install --prefer-binary -r requirements.txt
@@ -12,9 +12,13 @@ services:
 
   - type: web
     name: used-car-frontend
-    env: static
+    runtime: static
     buildCommand: npm install && npm run build
     staticPublishPath: dist
+    routes:
+      - type: rewrite
+        source: /*
+        destination: /index.html
     envVars:
       - key: VITE_API_URL
         fromService:
